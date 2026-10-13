@@ -21,7 +21,9 @@ router.post("/generate", async (req, res) => {
     const { text, warnings } = processOutput(raw, parsed.data.contentType);
     res.json({ text, warnings, contentType: parsed.data.contentType });
   } catch (err) {
-    res.status(err.status || 500).json({ error: err.message });
+    const status = err.status || 500;
+    console.error("[route] /generate failed:", status, err.code, err.message);
+    res.status(status).json({ error: err.message, code: err.code });
   }
 });
 
