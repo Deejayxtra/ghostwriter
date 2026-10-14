@@ -1,17 +1,22 @@
 export function processOutput(raw, contentType) {
-  if (!raw || raw.trim().length < 20) {
-    throw Object.assign(new Error("Generated content was too short."), { status: 502 });
-  }
-
-  // Strip common markdown fences if the model wraps output
-  let text = raw.replace(/^```[\w]*\n?|```$/gm, "").trim();
-
   const warnings = [];
-  if (contentType === "email" && !/^subject:/im.test(text)) {
-    warnings.push("No subject line detected.");
+  let text = (raw ?? "").trim();
+
+  if (!text) {
+    warnings.push("Model returned empty output.");
+    return { text, warnings };
   }
-  if (contentType === "blog" && !/^#|\n#/.test(text)) {
-    warnings.push("No headings detected.");
+
+  if (contentType === "email" && !/^subject:/im.test(text)) {
+    warnings.push("Email is missing a 'Subject:' line.");
+  }
+
+  if (contentType === "blog" && !/^#\s/m.test(text)) {
+    warnings.push("Blog post is missing a top-level title (H1).");
+  }
+
+  if (contentType === "social" && !/#\w/.test(text)) {
+    warnings.push("Social post has no hashtags.");
   }
 
   return { text, warnings };
