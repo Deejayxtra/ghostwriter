@@ -1,0 +1,23 @@
+{
+  "name": "ghostwriter",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm test --prefix server && npm test --prefix client",
+    "test:server": "npm test --prefix server",
+    "test:client": "npm test --prefix client"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Deejayxtra/ghostwriter.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Deejayxtra/ghostwriter/issues"
+  },
+  "homepage": "https://github.com/Deejayxtra/ghostwriter#readme"
+}
