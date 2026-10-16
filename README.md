@@ -39,6 +39,7 @@ Output is fully editable in-browser and can be exported as **Copy**, **TXT**, **
 ---
 
 ## Project structure
+```text
 ghostwriter/
 ├── client/ # React + Vite frontend
 │ ├── src/
@@ -73,8 +74,7 @@ ghostwriter/
 ├── .env.example
 ├── .gitignore
 └── README.md
-
-text
+```
 
 ---
 
