@@ -17,3 +17,10 @@ services:
     depends_on:
       - server
     restart: unless-stopped
+
+  server-tests:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    command: sh -c "npm install --include=dev && npm test"
+    profiles: ["test"]
