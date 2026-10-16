@@ -98,8 +98,9 @@ cp server/.env.example server/.env
 # edit server/.env and set OPENAI_API_KEY=sk-...
 Docker config
 Compose reads from a .env at the repo root:
+```
 
-bash
+```bash
 cp .env.example .env
 # edit .env and set OPENAI_API_KEY=sk-...
 Both .env files are gitignored. Never commit them.
@@ -108,15 +109,17 @@ Running locally (development)
 Two terminals.
 
 Terminal 1 — backend:
+```
 
-bash
+```bash
 cd server
 npm install
 npm run dev
 # → Ghostwriter API on :5001
 Terminal 2 — frontend:
+```
 
-bash
+```bash
 cd client
 npm install
 npm run dev
@@ -125,9 +128,11 @@ Open http://localhost:5173. Vite proxies /api/* to http://localhost:5001.
 
 On macOS, port 5000 is reserved by AirPlay Receiver (Control Center). The
 local dev server uses 5001 to avoid the conflict.
+```
 
 Running with Docker (production-like)
-bash
+
+```bash
 # 1. Make sure the root .env exists with your key
 cp .env.example .env
 nano .env
@@ -147,8 +152,9 @@ nginx inside the client container reverse-proxies /api/* to server:5000
 over the Docker network
 
 Stop the stack:
+```
 
-bash
+```bash
 docker compose down
 Do not run local dev and Docker at the same time — both bind port 5001. Stop one before starting the other.
 
@@ -157,9 +163,11 @@ Single endpoint: POST /api/generate
 
 Request body varies by contentType. All four content types use a discriminated
 union, so Zod validates the exact field set for the type you send.
+````
 
 Blog
-bash
+
+```bash
 curl -s -X POST http://localhost:5001/api/generate \
   -H "Content-Type: application/json" \
   -d '{
@@ -171,8 +179,10 @@ curl -s -X POST http://localhost:5001/api/generate \
     "seoFocus": "deep work, focus",
     "expertiseLevel": "intermediate"
   }'
+```
 Email
-bash
+
+```bash
 curl -s -X POST http://localhost:5001/api/generate \
   -H "Content-Type: application/json" \
   -d '{
@@ -184,8 +194,11 @@ curl -s -X POST http://localhost:5001/api/generate \
     "urgency": "normal",
     "cta": "reply with your preferred slot"
   }'
+```
+
 Story
-bash
+
+```bash
 curl -s -X POST http://localhost:5001/api/generate \
   -H "Content-Type: application/json" \
   -d '{
@@ -198,8 +211,11 @@ curl -s -X POST http://localhost:5001/api/generate \
     "audience": "children",
     "mood": "whimsical"
   }'
+```
+
 Social
-bash
+
+```bash
 curl -s -X POST http://localhost:5001/api/generate \
   -H "Content-Type: application/json" \
   -d '{
@@ -236,21 +252,28 @@ json
   "error": "OpenAI account has no credits. Add billing at platform.openai.com.",
   "code": "credit_balance_exhausted"
 }
+```
+
 Health check
-bash
+
+```bash
 curl http://localhost:5001/health
 # {"ok":true}
 Testing
 Backend
-bash
+```
+
+```bash
 cd server
 npm test
 11 tests: discriminated-union validation per content type, happy paths,
 post-processing warnings, and provider error mapping. Uses Vitest + Supertest;
 the OpenAI call is mocked, so no API key or network access is required.
+```
 
 Frontend
-bash
+
+```bash
 cd client
 npm test
 13 tests: content-type field swapping, payload shape, loading state,
@@ -267,45 +290,52 @@ server/.env.example and .env.example are committed as templates
 
 The OpenAI key is passed to the server container at runtime via Compose,
 not baked into any image layer
+```
 
 Verify with:
 
-bash
+```bash
 docker compose exec server sh -c 'echo "${OPENAI_API_KEY:0:12}…"'
 # prints the first 12 chars only
+```
+
 Verify the image contains no key material:
 
-bash
+```bash
 docker save ghostwriter-server | strings | grep -E 'sk-[A-Za-z0-9_-]{20,}'
 # expect: no output
-Common issues
-Symptom	Cause	Fix
-EADDRINUSE :::5001	Something already on port 5001	lsof -ti :5001 | xargs kill
-429 credit_balance_exhausted	OpenAI account has no credit	Add credit at platform.openai.com
-401 invalid_api_key	Key wrong or revoked	Regenerate at platform.openai.com and re-paste in .env
-502 Bad Gateway from nginx	Backend container not running	docker compose logs server
-Browser shows Failed to fetch in dev	Vite proxy misconfigured	Confirm client/vite.config.js targets :5001
-404 on refresh at /some/route	nginx SPA fallback missing	try_files $uri /index.html; in client/nginx.conf
-Docker changes not picked up	Env changes need a container recreate, not just restart	docker compose up -d --force-recreate server
-Design decisions
-Discriminated union in Zod rather than one flat schema — each content
+```
+
+## Common issues
+| Symptom	| Cause	| Fix |
+|---------|-------|-----|
+| EADDRINUSE :::5001	| Something already on port 5001	| lsof -ti :5001 | xargs kill
+| 429 credit_balance_exhausted	| OpenAI account has no credit	| Add credit at platform.openai.com
+| 401 invalid_api_key	| Key wrong or revoked	| Regenerate at platform.openai.com and re-paste in .env
+| 502 Bad Gateway from nginx	| Backend container not running	| docker compose logs server
+| Browser shows Failed to fetch in dev	| Vite proxy misconfigured	| Confirm client/vite.config.js targets :5001
+| 404 on refresh at /some/route	| nginx SPA fallback missing	| try_files $uri /index.html; in client/nginx.conf
+| Docker changes not picked up	| Env changes need a container recreate, not just restart	| docker compose up -d --force-recreate server
+
+## Design decisions
+**Discriminated union in Zod** rather than one flat schema — each content
 type validates against only its own fields, so invalid combinations are
 rejected before hitting the AI.
 
-Per-type prompt builders in server/prompts/templates.js — keeps prompt
+**Per-type prompt builders** in server/prompts/templates.js — keeps prompt
 engineering next to the data it depends on.
 
-Type-aware post-processing in server/services/postProcess.js — warns
+**Type-aware post-processing** in server/services/postProcess.js — warns
 when, e.g., an email lacks a Subject: line or a social post has no
 hashtags.
 
-Port 5001 for local dev — macOS's Control Center owns 5000.
+**Port 5001 for local dev** — macOS's Control Center owns 5000.
 
-nginx reverse proxy in prod — the React app is served as static files
+**nginx reverse proxy in prod** — the React app is served as static files
 and same-origin /api/* calls are proxied to the backend, avoiding CORS
 entirely in production.
 
-Costs
+## Costs
 OpenAI charges per token. gpt-4o-mini is inexpensive but not free. Set a
 monthly budget cap in your OpenAI dashboard at
 https://platform.openai.com/settings/organization/limits to prevent
@@ -313,5 +343,25 @@ unexpected spend.
 
 Typical cost for a short blog post with gpt-4o-mini: well under $0.01.
 
-License
-MIT — see LICENSE if present, otherwise treat as MIT.
+## License
+MIT License
+
+Copyright (c) 2026 Ayodeji Olumuyiwa
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
