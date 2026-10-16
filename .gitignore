@@ -1,1 +1,25 @@
+# Dependencies
+node_modules/
+
+# Env files (never commit secrets)
 .env
+.env.*
+!.env.example
+
+# Build output
+dist/
+build/
+
+# Coverage
+coverage/
+
+# Editor / OS
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.log
+npm-debug.log*
+
+# Docker
+.docker/
