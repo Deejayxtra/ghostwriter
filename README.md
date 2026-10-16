@@ -142,6 +142,7 @@ docker compose up --build
 
 # 3. Open the app
 open http://localhost:8080
+```
 What you get:
 
 client container: nginx serving the built React bundle on host port 8080
@@ -152,7 +153,6 @@ nginx inside the client container reverse-proxies /api/* to server:5000
 over the Docker network
 
 Stop the stack:
-```
 
 ```bash
 docker compose down
